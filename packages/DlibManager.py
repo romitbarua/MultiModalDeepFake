@@ -6,27 +6,20 @@ import numpy as np
 
 class DlibManager:
 
-    def __init__(self, predictor, detector, video = None, video_path=None) -> None:
+    def __init__(self, predictor_path='model/dlib/shape_predictor_68_face_landmarks.dat') -> None:
 
-        assert (video is not None and video_path is None) or (video is None and video_path is not None), 'Please provide either an image path or image'
 
-        if video_path is not None:
-            self.video_path = video_path
-            self.video = self.loadVideoPath()
-        else:
-            self.video = video
 
-        self.predictor = predictor
-        self.detector = detector
+        self.predictor = dlib.shape_predictor(predictor_path)
+        self.detector = dlib.get_frontal_face_detector()
 
-        self.full_frames = self._openFrames()
-        self.landmarks = self._generateLandmarks()
-        self.lip_frames = self._generateLipFrames()
+        self.landmarks = None
+        self.lip_frames = None
 
-    def _generateLandmarks(self):
+    def _generateLandmarks(self, video_frames, load_object=False):
 
         video_landmarks = []
-        for frame in self.full_frames:
+        for frame in video_frames:
 
             #get landmarks
             landmarks = self._generateFrameLandmarks(frame)
@@ -38,6 +31,10 @@ class DlibManager:
                     #cv2.putText(frame, str(idx), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.1,(255,255,255),2,cv2.LINE_AA)
                 
                 #dlib_frames.append(frame)
+        
+        if load_object:
+            self.landmarks = video_landmarks
+
         return video_landmarks
 
     def _generateFrameLandmarks(self, frame):
@@ -50,9 +47,6 @@ class DlibManager:
         return landmarks
         
 
-    def loadVideoPath(self):
-        pass
-
     def _shape_to_np(self, shape, dtype="int"):
         # initialize the list of (x, y)-coordinates
         coords = np.zeros((68, 2), dtype=dtype)
@@ -63,25 +57,18 @@ class DlibManager:
         # return the list of (x, y)-coordinates
         return coords
 
-    def _openFrames(self):
-        
-        frames = []
-        while(self.video.isOpened()):
-            ret, frame = self.video.read()
-            if ret == True:
-                frames.append(frame)
-            else:
-                break
-
-        return frames
-
-    def _generateLipFrames(self, extension_pixels=20):
+    def _generateLipFrames(self, video_frames, extension_pixels, load_object):
         
         lip_landmark_idx = [49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67]
         lip_frames = []
 
-        for idx, frame in enumerate(self.full_frames):
-            lip_landmarks = self.landmarks[idx][lip_landmark_idx]
+        if isinstance(self.landmarks, type(None)):
+            landmarks = self._generateLandmarks(video_frames, load_object=False)
+        else:
+            landmarks = self.landmarks
+
+        for idx, frame in enumerate(video_frames):
+            lip_landmarks = landmarks[idx][lip_landmark_idx]
 
             max_x = np.max(lip_landmarks[:, 0])+extension_pixels
             min_x = np.min(lip_landmarks[:, 0])-extension_pixels
@@ -90,6 +77,10 @@ class DlibManager:
 
             lip_frame = frame[min_y:max_y, min_x:max_x]
             lip_frames.append(lip_frame)
+
+
+        if load_object:
+            self.lip_frames = lip_frames
 
         return lip_frames
 
