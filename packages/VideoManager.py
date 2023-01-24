@@ -1,5 +1,5 @@
-import DlibManager
-import LibrosaManager
+from packages.DlibManager import DlibManager
+from packages.LibrosaManager import LibrosaManager
 import cv2
 
 class VideoManager:
@@ -12,7 +12,8 @@ class VideoManager:
         self.audio_path = audio_path
         self.phoneme_path = phoneme_path
 
-        self.dlib_manager = DlibManager(self.video_frames)
+        self.dlib_manager = DlibManager()
+        self.librosa_manager = LibrosaManager(self.audio_path)
 
 
     def loadVideo(self):
@@ -23,7 +24,7 @@ class VideoManager:
         while(video.isOpened()):
             ret, frame =  video.read()
             if ret == True:
-                frames(frame)
+                frames.append(frame)
             else:
                 break
         
@@ -34,6 +35,11 @@ class VideoManager:
 
     def getLipFrames(self, extension_pixels=20, load_object=False):
         return self.dlib_manager._generateLipFrames(self.video_frames, extension_pixels, load_object)
+
+    def getMFCC(self, n_mfcc=12, window_time=25,  hop_time=10, load_object=False):
+        return self.librosa_manager._generateMFCC(n_mfcc = n_mfcc, window_time=window_time, hop_time=hop_time, load_object=load_object)
+        
+
 
     
 

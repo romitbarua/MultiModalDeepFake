@@ -2,6 +2,7 @@
 import dlib
 import cv2
 import numpy as np
+from packages.Utils.ImageUtils import resizeImage, convertColor
 
 
 class DlibManager:
@@ -25,12 +26,6 @@ class DlibManager:
             landmarks = self._generateFrameLandmarks(frame)
             video_landmarks.append(landmarks)
 
-                #overlay landmarks onto image
-                #for idx, (x, y) in enumerate(landmarks):
-                #    cv2.circle(frame, (x, y), 1, (0, 0, 255), -1)
-                    #cv2.putText(frame, str(idx), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.1,(255,255,255),2,cv2.LINE_AA)
-                
-                #dlib_frames.append(frame)
         
         if load_object:
             self.landmarks = video_landmarks
@@ -38,7 +33,7 @@ class DlibManager:
         return video_landmarks
 
     def _generateFrameLandmarks(self, frame):
-        frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        frame_gray = convertColor(frame, cv2.COLOR_BGR2GRAY)
         dets = self.detector(frame_gray)
 
         landmarks = self.predictor(frame_gray, dets[0])
