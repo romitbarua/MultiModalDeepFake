@@ -1,7 +1,42 @@
+from lib2to3.pgen2.tokenize import tokenize
+import os
+from secrets import token_urlsafe
+import pandas as pd
+
 class BaseDeepFakeGenerator:
     
-    def __init__(self):
+    def __init__(self, tokenize_type: str = None):
+
+        if not isinstance(tokenize_type, type(None)):
+            assert tokenize_type.lower() in ['word', 'sentence'],  'If you provide a tokenize type, it must be sentence or word'
+        self.tokenize_type = tokenize_type
+        
+    def loadTextFromDataFrame(self, dataframe_path: str, source_col: str, transcript_col: str):
+        
+        metadata = pd.read_csv(dataframe_path)
+        source_paths = list(metadata[source_col])
+        file_names = [os.path.basename(source_path) for source_path in source_paths]
+        transcripts = list(metadata[transcript_col])
+
+        return file_names, transcripts
+
+    
+    def loadTextFromDirectory(self, dir_name: str):
+        
+        for file_name in os.listdir(dir_name):
+            if '.txt' in file_name:
+                pass
+
+    def _readTextFile(self, text_path: str):
+        
+        with open(text_path) as f:
+            lines = f.readlines()
+
+
+        f.close()
+
+
+    def _preProcessText(self, text: str):
+
         pass
-    
-    
-    
+
