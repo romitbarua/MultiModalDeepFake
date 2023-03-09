@@ -11,7 +11,6 @@ class ElevenLabsDeepFakeGenerator(BaseDeepFakeGenerator):
         super().__init__()
         self.api_key = self._load_API_key()
         
-    
     def _load_API_key(self, config_path='./Configs/secret/config.yaml'):
         with open(config_path, 'r') as file:
             inputs = yaml.safe_load(file)
@@ -27,13 +26,18 @@ class ElevenLabsDeepFakeGenerator(BaseDeepFakeGenerator):
                                                             transcript_col=transcript_col)
 
         for idx, transcript in enumerate(transcripts):
-            audio_clip = self.generateDeepfake(voice_id=voice_id,
-                                                text=transcript)
+            try:
+                audio_clip = self.generateDeepfake(voice_id=voice_id,
+                                                    text=transcript)
 
-            file_name = file_names[idx].replace(os.path.splitext(file_names[idx])[1], '.mpeg')
-            with open(os.path.join(output_dir, file_name), 'wb') as f:
-                f.write(audio_clip.content)
-                f.close()
+                file_name = file_names[idx].replace(os.path.splitext(file_names[idx])[1], '.mpeg')
+                with open(os.path.join(output_dir, file_name), 'wb') as f:
+                    f.write(audio_clip.content)
+                    f.close()
+            except Exception as e:
+                print(f'Failed to Generate DeepFake for {file_names[idx]}')
+                print(f'Error: {str(e)}')
+                print()
         
     def generateDeepfake(self, voice_id, text):
         headers = {
