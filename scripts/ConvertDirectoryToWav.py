@@ -5,7 +5,7 @@ from packages.AudioManager import AudioManager
 
 def main():
 
-    dir = '/Users/romitbarua/Documents/Berkeley/Spring 2023/MultiModalDeepFake/data/wavefake_data/ElevenLabsDeepFakes'
+    dir = '/home/ubuntu/data/wavefake_data/generated_audio/ljspeech_elevenlabs'
 
     am = AudioManager()
     am.convertAudioDirectory(dir, input_format='.mpeg')

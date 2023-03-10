@@ -27,18 +27,22 @@ class AudioManager:
                                 output_file_name: str = None):
         
         assert output_format in ['.wav', '.mp4'], 'Please enter valid output type (.wav, .mp4)'
-
-        import_audio = AudioSegment.from_file(audio_path)
-
-        if isinstance(output_file_name, type(None)):
-            output_file_name = os.path.basename(audio_path)
-        output_file_name = output_file_name.replace(os.path.splitext(output_file_name)[1], output_format)
-
-        if isinstance(output_dir, type(None)):
-            output_dir = os.path.dirname(audio_path)
         
-        import_audio.export(os.path.join(output_dir, output_file_name), format=output_format)
+        try:
+            import_audio = AudioSegment.from_file(audio_path)
 
-        if delete_original:
-            os.remove(audio_path)
+            if isinstance(output_file_name, type(None)):
+                output_file_name = os.path.basename(audio_path)
+            output_file_name = output_file_name.replace(os.path.splitext(output_file_name)[1], output_format)
+
+            if isinstance(output_dir, type(None)):
+                output_dir = os.path.dirname(audio_path)
+
+            import_audio.export(os.path.join(output_dir, output_file_name), format=output_format.replace('.', ''))
+
+            if delete_original:
+                os.remove(audio_path)
+                
+        except:
+            print(f'Failed to Convert Audio File: {audio_path}')
 

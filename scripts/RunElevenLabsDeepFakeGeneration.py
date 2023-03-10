@@ -5,8 +5,8 @@ from packages.ElevenLabsDeepFakeGenerator import ElevenLabsDeepFakeGenerator
 
 def main():
 
-    file_path = '/Users/romitbarua/Downloads/labs_sample.csv'
-    output_dir = '/Users/romitbarua/Documents/Berkeley/Spring 2023/MultiModalDeepFake/data/wavefake_data/ElevenLabsDeepFakes/'
+    file_path = '/home/ubuntu/sample.csv'
+    output_dir = '/home/ubuntu/data/wavefake_data/generated_audio/11LabsDeepFakes/'
     source_col = 'Real'
     transcript_col = 'transcript_1'
     deepfake_machine = ElevenLabsDeepFakeGenerator()
