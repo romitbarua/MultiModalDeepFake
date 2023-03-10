@@ -3,6 +3,7 @@ import requests
 import os
 
 from packages.BaseDeepFakeGenerator import BaseDeepFakeGenerator
+from packages.AudioManager import  AudioManager
 
 class ElevenLabsDeepFakeGenerator(BaseDeepFakeGenerator):
     
@@ -19,11 +20,15 @@ class ElevenLabsDeepFakeGenerator(BaseDeepFakeGenerator):
 
     def generateDeepFakeFromDataFrame(self, dataframe_path: str, output_dir: str,
                                         source_col: str, transcript_col: str, 
-                                        voice_id: str):
+                                        voice_id: str,
+                                        convert_audio_to_format: str = None):
         
         file_names, transcripts = self.loadTextFromDataFrame(dataframe_path=dataframe_path,
                                                             source_col=source_col,
                                                             transcript_col=transcript_col)
+
+        if convert_audio_to_format:
+            audio_manager = AudioManager()
 
         for idx, transcript in enumerate(transcripts):
             try:
@@ -38,6 +43,13 @@ class ElevenLabsDeepFakeGenerator(BaseDeepFakeGenerator):
                 print(f'Failed to Generate DeepFake for {file_names[idx]}')
                 print(f'Error: {str(e)}')
                 print()
+
+            if convert_audio_to_format:
+                audio_manager.convertAudioFileTypes(os.path.join(output_dir, file_name),
+                                                    output_format=convert_audio_to_format,
+                                                    delete_original=True)
+
+            
         
     def generateDeepfake(self, voice_id, text):
         headers = {
