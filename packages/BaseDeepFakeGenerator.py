@@ -38,16 +38,13 @@ class BaseDeepFakeGenerator:
 
         f.close()
 
-
-    def _preProcessText(self, text: str):
-
-        pass
     
     def process_transcripts(self, transcripts: list, punc_to_remove: list):
         
         processed_transcripts = []
-        for transcript in transcripts:
+        for idx, transcript in enumerate(transcripts):
             for punc in punc_to_remove:
+                print(idx)
                 transcript = transcript.replace(punc, '')
             processed_transcripts.append(transcript)
         return processed_transcripts

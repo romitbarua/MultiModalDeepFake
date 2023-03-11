@@ -10,7 +10,7 @@ class LibrosaManager:
         self.time_series = None
         self.sampling_rate = None 
         self._loadAudio(audio_path)
-        self.duration = librosa.get_duration(self.time_series)
+        self.duration = librosa.get_duration(y=self.time_series)
 
         self.mfcc = None
         

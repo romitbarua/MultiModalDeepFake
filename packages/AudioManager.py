@@ -53,7 +53,7 @@ class AudioManager:
         for file in os.listdir(input_directory):
             try:
                 librosa_manager = LibrosaManager(os.path.join(input_directory, file))
-                resampled_audio = librosa_manager(target_sample_rate)
+                resampled_audio = librosa_manager.resample(target_sample_rate)
                 sf.write(os.path.join(output_directory, file), resampled_audio, target_sample_rate, subtype='PCM_24')
             except Exception as e:
                 print(f'Failed to Resample: {file}')
