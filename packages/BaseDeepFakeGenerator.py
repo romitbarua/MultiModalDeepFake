@@ -11,12 +11,15 @@ class BaseDeepFakeGenerator:
             assert tokenize_type.lower() in ['word', 'sentence'],  'If you provide a tokenize type, it must be sentence or word'
         self.tokenize_type = tokenize_type
         
-    def loadTextFromDataFrame(self, dataframe_path: str, source_col: str, transcript_col: str):
+    def loadTextFromDataFrame(self, dataframe_path: str, source_col: str, transcript_col: str, punc_to_remove: list = None):
         
         metadata = pd.read_csv(dataframe_path)
         source_paths = list(metadata[source_col])
         file_names = [os.path.basename(source_path) for source_path in source_paths]
         transcripts = list(metadata[transcript_col])
+        
+        if punc_to_remove:
+            transcripts = self.process_transcripts(transcripts, punc_to_remove)
 
         return file_names, transcripts
 
@@ -39,4 +42,13 @@ class BaseDeepFakeGenerator:
     def _preProcessText(self, text: str):
 
         pass
+    
+    def process_transcripts(self, transcripts: list, punc_to_remove: list):
+        
+        processed_transcripts = []
+        for transcript in transcripts:
+            for punc in punc_to_remove:
+                transcript = transcript.replace(punc, '')
+            processed_transcripts.append(transcript)
+        return processed_transcripts
 

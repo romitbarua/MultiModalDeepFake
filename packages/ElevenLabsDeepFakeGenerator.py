@@ -21,11 +21,13 @@ class ElevenLabsDeepFakeGenerator(BaseDeepFakeGenerator):
     def generateDeepFakeFromDataFrame(self, dataframe_path: str, output_dir: str,
                                         source_col: str, transcript_col: str, 
                                         voice_id: str,
-                                        convert_audio_to_format: str = None):
+                                        convert_audio_to_format: str = None,
+                                        punc_to_remove: list = None):
         
         file_names, transcripts = self.loadTextFromDataFrame(dataframe_path=dataframe_path,
                                                             source_col=source_col,
-                                                            transcript_col=transcript_col)
+                                                            transcript_col=transcript_col,
+                                                            punc_to_remove=punc_to_remove)
 
         if convert_audio_to_format:
             audio_manager = AudioManager()
@@ -61,5 +63,9 @@ class ElevenLabsDeepFakeGenerator(BaseDeepFakeGenerator):
         data = f'{{"text": "{text}"}}'
 
         return requests.post(f'https://api.elevenlabs.io/v1/text-to-speech/{voice_id}', headers=headers, data=data)
+    
+    
+
+            
 
         
