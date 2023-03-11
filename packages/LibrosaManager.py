@@ -1,6 +1,5 @@
 from json import load
 import librosa
-from packages.AudioManager import AudioManager
 
 class LibrosaManager:
 
@@ -18,7 +17,7 @@ class LibrosaManager:
     def _loadAudio(self, audio_path):
         self.time_series, self.sampling_rate = librosa.load(audio_path)
 
-    def _generateMFCC(self, n_mfcc, window_time, hop_time, load_object=False):
+    def generateMFCC(self, n_mfcc, window_time, hop_time, load_object=False):
 
         win_length = int(self.sample_rate/1000 * window_time)
         hop_length = int(self.sample_rate/1000 * hop_time)
@@ -29,6 +28,11 @@ class LibrosaManager:
             self.mfcc = mfcc
 
         return mfcc
+
+    def resample(self, target_sample_rate):
+        return librosa.resample(y=self.time_series.T, orig_sr=self.sampling_rate, target_sr=target_sample_rate)
+
+
 
 
 
