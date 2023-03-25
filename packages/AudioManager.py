@@ -13,20 +13,26 @@ class AudioManager:
                                 input_format: str,
                                 output_format: str = '.wav',
                                 output_dir: str = None,
-                                delete_original: bool = True):
+                                delete_original: bool = False,
+                                bitrate: str = None,
+                                codec: str = None):
 
         for file in os.listdir(audio_dir):
 
             if input_format in file:
                 self.convertAudioFileTypes(os.path.join(audio_dir, file), output_format=output_format, 
-                                            delete_original=delete_original, output_dir=output_dir)
+                                            delete_original=delete_original, output_dir=output_dir,
+                                            bitrate=bitrate, codec=codec)
+                
 
 
     def convertAudioFileTypes(self, audio_path: str,
                                 output_format: str = '.wav',
-                                delete_original: bool = True,
+                                delete_original: bool = False,
                                 output_dir: str = None,
-                                output_file_name: str = None):
+                                output_file_name: str = None,
+                                bitrate: str = None,
+                                codec: str = None):
         
         assert output_format in ['.wav', '.mp4'], 'Please enter valid output type (.wav, .mp4)'
         
@@ -37,16 +43,20 @@ class AudioManager:
                 output_file_name = os.path.basename(audio_path)
             output_file_name = output_file_name.replace(os.path.splitext(output_file_name)[1], output_format)
 
-            if isinstance(output_dir, type(None)):
+            if not output_dir:
                 output_dir = os.path.dirname(audio_path)
 
-            import_audio.export(os.path.join(output_dir, output_file_name), format=output_format.replace('.', ''))
+            import_audio.export(os.path.join(output_dir, output_file_name),
+                                format=output_format.replace('.', ''),
+                                codec=codec,
+                                bitrate=bitrate)
 
             if delete_original:
                 os.remove(audio_path)
                 
-        except:
+        except Exception as e:
             print(f'Failed to Convert Audio File: {audio_path}')
+            print('Error: ', e)
 
     def resampleAudioDirectory(self, input_directory: str, output_directory: str, target_sample_rate):
         
