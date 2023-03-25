@@ -4,11 +4,17 @@ import numpy as np
 
 class LJDataLoader:
 
-    def __init__(self, data_path: str, id_col: str = id) -> None:
+    def __init__(self, data_path: str, id_col: str = 'id') -> None:
         
         assert '.csv' in data_path, 'Data Path should be a csv file.'
         self.metadata = pd.read_csv(data_path)
+        self._validateData()
         self.id_col = id_col
+        
+    def _validateData(self):
+        # ADD MORE GRANULAR FUNCTIONALITY LATER
+        self.metadata = self.metadata.dropna().reset_index()
+        
 
     def splitData(self, train_perc=0.6, dev_perc=0.2, test_perc=0.2, shuffle: bool=True):
         assert train_perc+dev_perc+test_perc == 1, ''
@@ -31,14 +37,14 @@ class LJDataLoader:
 
         self.metadata[target_col] = self.metadata.apply(lambda row: randomlySelectCols(row), axis=1)
 
-    def generateTrainingDataframe(self, real_col: str, fake_cols: list, single_id_entry: bool = False):
+    def generateFinalDataFrame(self, real_col: str, fake_cols: list, single_id_entry: bool = False):
 
         agg_cols = [real_col] + fake_cols
 
         if single_id_entry:
             filter_df = self.metadata[agg_cols].copy()
             multiclass_labels = np.random.randint(0, len(agg_cols), filter_df.shape[0]).reshape(filter_df.shape[0], -1)
-            chosen_data = np.take_along_axis(self.filter_df.to_numpy(), multiclass_labels, axis=1).squeeze()
+            chosen_data = np.take_along_axis(filter_df.to_numpy(), multiclass_labels, axis=1).squeeze()
             multiclass_labels = multiclass_labels.squeeze()
             labels = np.where(multiclass_labels == 0, 0, 1) #in the future, may need to double check that this works for varying column orders
             return pd.DataFrame({'path':chosen_data, 'label':labels, 'multiclass_label':multiclass_labels, 'type':self.metadata['type']})
