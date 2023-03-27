@@ -21,7 +21,7 @@ class ElevenLabsDeepFakeGenerator(BaseDeepFakeGenerator):
     def generateDeepFakeFromDataFrame(self, dataframe_path: str, output_dir: str,
                                         source_col: str, transcript_col: str, 
                                         voice_id: str,
-                                        voice_name: str,
+                                        voice_name: str = None,
                                         convert_audio_to_format: str = None,
                                         punc_to_remove: list = None):
         
@@ -39,7 +39,6 @@ class ElevenLabsDeepFakeGenerator(BaseDeepFakeGenerator):
                                                     text=transcript)
 
                 file_name = file_names[idx].replace(os.path.splitext(file_names[idx])[1], '.mpeg')
-                print(file_name.split('.')[0] + '_' + voice_name)
                 with open(os.path.join(output_dir, file_name), 'wb') as f:
                     f.write(audio_clip.content)
                     f.close()
@@ -63,6 +62,8 @@ class ElevenLabsDeepFakeGenerator(BaseDeepFakeGenerator):
         }
 
         data = f'{{"text": "{text}"}}'
+        
+        
 
         return requests.post(f'https://api.elevenlabs.io/v1/text-to-speech/{voice_id}', headers=headers, data=data)
     

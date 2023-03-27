@@ -34,7 +34,7 @@ class AudioManager:
                                 bitrate: str = None,
                                 codec: str = None):
         
-        assert output_format in ['.wav', '.mp4'], 'Please enter valid output type (.wav, .mp4)'
+        assert output_format in ['.wav', '.mp4'], f'{output_format} is an invalid output format. Please enter types: (.wav, .mp4).'
         
         try:
             import_audio = AudioSegment.from_file(audio_path)

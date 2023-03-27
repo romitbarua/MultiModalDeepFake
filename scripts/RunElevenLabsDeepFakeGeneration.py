@@ -11,7 +11,7 @@ def main():
     transcript_col = 'transcript_1'
     deepfake_machine = ElevenLabsDeepFakeGenerator()
 
-    deepfake_machine.generateDeepFakeFromDataFrame(file_path, output_dir, source_col, transcript_col, 'qeVSLLD6XfJjhEBj9qYp', '.wav', ['"'])
+    deepfake_machine.generateDeepFakeFromDataFrame(dataframe_path=file_path, output_dir=output_dir, source_col=source_col, transcript_col=transcript_col, voice_id='qeVSLLD6XfJjhEBj9qYp', convert_audio_to_format='.wav', punc_to_remove=['"', '£'])
 
 
 main()
