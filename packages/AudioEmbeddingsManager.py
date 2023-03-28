@@ -8,7 +8,7 @@ class AudioEmbeddingsManager:
 
     def generateEmbeddings(self, normalize: bool = False):
 
-        embeddings = np.array([self.model.get_embedding(file_path).cpu().detach().numpy()[0] for file_path in self.data['paths']])
+        embeddings = np.array([self.model.get_embedding(file_path).cpu().detach().numpy()[0] for file_path in self.data['path']])
         
         if normalize:
             raise NotImplementedError

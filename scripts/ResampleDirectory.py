@@ -10,6 +10,6 @@ def main():
     target_sample_rate = 16000
     
     am = AudioManager()
-    am.resampleAudioDirectory(input_directory=input_folder, output_directory=output_folder, target_sample_rate=target_sample_rate)
+    am.resampleAudioDirectory(input_directory=input_folder, output_directory=output_folder, target_sample_rate=target_sample_rate, replace_existing=False)
     
 main()

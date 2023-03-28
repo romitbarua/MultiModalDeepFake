@@ -15,6 +15,9 @@ class LJDataLoader:
         # ADD MORE GRANULAR FUNCTIONALITY LATER
         self.metadata = self.metadata.dropna().reset_index()
         
+    def sample(self, perc: float = 0.1):
+        self.metadata = self.metadata.sample(frac=perc).reset_index()
+        
 
     def splitData(self, train_perc=0.6, dev_perc=0.2, test_perc=0.2, shuffle: bool=True):
         assert train_perc+dev_perc+test_perc == 1, ''

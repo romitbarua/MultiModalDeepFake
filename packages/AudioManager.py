@@ -58,9 +58,13 @@ class AudioManager:
             print(f'Failed to Convert Audio File: {audio_path}')
             print('Error: ', e)
 
-    def resampleAudioDirectory(self, input_directory: str, output_directory: str, target_sample_rate):
+    def resampleAudioDirectory(self, input_directory: str, output_directory: str, target_sample_rate: int, replace_existing: bool = False):
         
         for file in os.listdir(input_directory):
+            if not replace_existing:
+                if os.path.isfile(os.path.join(output_directory, file)):
+                    continue
+            
             try:
                 librosa_manager = LibrosaManager(os.path.join(input_directory, file))
                 resampled_audio = librosa_manager.resample(target_sample_rate)
