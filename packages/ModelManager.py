@@ -8,7 +8,7 @@ from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import numpy as np
 
-VALID_MODELS = ['svn', 'logreg', 'kmeans']
+VALID_MODELS = ['svm', 'logreg', 'kmeans']
 
 class ModelManager:
 
