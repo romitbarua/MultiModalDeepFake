@@ -12,6 +12,7 @@ import soundfile as sf
 import matplotlib.pyplot as plt
 import scipy.stats as stats
 from numpy import diff
+from sklearn.preprocessing import MinMaxScaler
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -25,6 +26,7 @@ class CadenceModelManager:
         self.silence_threshold = silence_threshold
         self.low_pass_filter_cutoff = low_pass_filter_cutoff
         self.window_size = trunc_window_size
+        self.sr = sr = librosa.load(self.data['path'][0])[1]
 
         ## RB COMMENT: FOR NOW I AM STORING THE NORMALIZED AND TRUNCATED AUDIO, BUT MAYBE WE WANT TO MOVE TO A SINGLE VAR
         ## FROM A SPACE EFFICIENCY PERSPECTIVE (ESPECIALLY AS OUR LJ DATASET GROWS, IT MAY BE A LOT TO SAVE IN MEMORY)
@@ -40,8 +42,9 @@ class CadenceModelManager:
         #print('Extracting input files')
         #all_wav_files, all_flags = extract_input_files(data_input_path)
         
+        ## RB COMMENT: MOVED INTO THE INNIT FUNCTION
         # Obtain sample rate
-        sr = librosa.load(self.data['path'][0])[1]
+        #sr = librosa.load(self.data['path'][0])[1]
         
         ## RB COMMENT: COMMENTING OUT -> DONE IN MODULE 1
         # Balance data
@@ -69,7 +72,7 @@ class CadenceModelManager:
 
         # Extract amplitude and derivative
         print('Extracting amplitude features')
-        amps = self.run_all_files(self.get_amplitude, sample_rate=sr, cutoff_frequency=self.low_pass_filter_cutoff)
+        amps = self.run_all_files(self.get_amplitude)
         
         ## FEATURE CONSOLIDATION
         # Create dataframe 
@@ -84,10 +87,17 @@ class CadenceModelManager:
                             })
         
         print('Complete')
+        
+        
 
         full_df = pd.concat((self.data, features), axis=1)
+        
+        scaler = MinMaxScaler()
+        full_df.loc[full_df['type'] == 'train', list(features.columns)] = scaler.fit_transform(full_df.loc[full_df['type']=='train', list(features.columns)])
+        full_df.loc[~(full_df['type'] == 'train'), list(features.columns)] = scaler.transform(full_df.loc[~(full_df['type']=='train'), list(features.columns)])
+                                                                                   
 
-        return full_df
+        return full_df, list(features.columns)
 
 
     ################################################## MODEL TESTING SCRIPT ##################################################
@@ -198,7 +208,7 @@ class CadenceModelManager:
             sample = librosa.load(file)[0]
             max_abs = np.max(np.abs(sample))
             normalized_sample = sample/max_abs
-            self.normalized_audios.append(normalized_sample)
+            self.normalized_audio.append(normalized_sample)
 
     def truncate_silences(self, counter=0):
 
@@ -230,7 +240,7 @@ class CadenceModelManager:
     def moving_average(self, x, w):
         return np.convolve(x, np.ones(w), 'valid') / w
 
-    def get_silence(self, audio, sample_rate=None, cutoff_frequency=None):
+    def get_silence(self, audio):
         thresh = max(abs(audio))*self.silence_threshold
         
         moving_avg = self.moving_average(abs(audio), 100)
@@ -244,7 +254,7 @@ class CadenceModelManager:
 
         return {'pct_pause':pct_pause, 'pct_voiced': pct_voiced, 'ratio_pause_voiced': ratio_pause_voiced}
 
-    def get_silence_spread(self, audio, sample_rate=None, cutoff_frequency=None):
+    def get_silence_spread(self, audio):
 
         thresh = max(abs(audio))*self.silence_threshold
         
@@ -301,24 +311,24 @@ class CadenceModelManager:
         return r_results, f_results
     '''
 
-    def run_all_files(self, sample_rate, cutoff_frequency):
+    def run_all_files(self, function):
         results = []
         for item in self.truncated_audio:
-            results.append(function(item, sample_rate, cutoff_frequency))
+            results.append(function(item))
         return results
 
-    def filter_signal(self, audio, sample_rate, cutoff_frequency):
-        t = np.arange(len(audio)) / sample_rate 
-        w = cutoff_frequency / (sample_rate / 2) 
+    def filter_signal(self, audio):
+        t = np.arange(len(audio)) / self.sr
+        w = self.low_pass_filter_cutoff / (self.sr / 2) 
         b, a = signal.butter(5, w, 'low')
         smoothed_signal = signal.filtfilt(b, a, audio)
         
         return smoothed_signal
 
-    def get_amplitude(self, audio, sample_rate, cutoff_frequency):
+    def get_amplitude(self, audio):
 
         abs_audio = abs(audio)
-        smoothed_signal = self.filter_signal(abs_audio, sample_rate, cutoff_frequency)
+        smoothed_signal = self.filter_signal(abs_audio)
         
         deriv_amplitude = np.mean(diff(smoothed_signal))
         mean_amplitude = np.mean(smoothed_signal)

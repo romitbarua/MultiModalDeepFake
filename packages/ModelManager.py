@@ -4,11 +4,11 @@ from sklearn.metrics import accuracy_score, log_loss, roc_curve
 import pandas as pd
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
-from sklearn.cluster import KMeans
+from sklearn.neighbors import KNeighborsClassifier
 import matplotlib.pyplot as plt
 import numpy as np
 
-VALID_MODELS = ['svn', 'logreg', 'kmeans']
+VALID_MODELS = ['svm', 'logreg', 'knn']
 
 class ModelManager:
 
@@ -34,11 +34,11 @@ class ModelManager:
                 self.model = LogisticRegression()
             else:
                 self.model = LogisticRegression(**params)
-        elif self.model_name == 'kmeans':
+        elif self.model_name == 'knn':
             if params is None:
-                self.model = KMeans()
+                self.model = KNeighborsClassifier()
             else:
-                self.model = KMeans(**params)
+                self.model = KNeighborsClassifier(**params)
 
     def _splitDataframe(self, merge_train_dev: bool):
 
@@ -50,6 +50,10 @@ class ModelManager:
             self.dev = self.data[(self.data.type == 'dev')]
 
         self.test = self.data[(self.data.type == 'test')]         
+        
+        ## TEMP SOLUTION
+        self.train = self.train.dropna()
+        self.test = self.test.dropna()
 
     def trainModel(self, label_col: str):
         # Train the model using the training data
@@ -62,14 +66,20 @@ class ModelManager:
         # Make predictions on the test data
         self.y_test = self.test[label_col]
         self.X_test = self.test[self.feature_cols].copy()
+        
         self.y_pred = self.model.predict(self.X_test)
-        self.y_prob = self.model.predict_proba(self.X_test)
+        
 
         # Calculate accuracy and log loss
         self.accuracy = accuracy_score(self.y_test, self.y_pred)
-        self.log_loss_value = log_loss(self.y_test, self.y_prob)
+        
+        if self.model_name not in ['svm']:
+            self.y_prob = self.model.predict_proba(self.X_test)
+            self.log_loss_value = log_loss(self.y_test, self.y_prob)
 
-        return self.accuracy, self.log_loss_value
+            return self.accuracy, self.log_loss_value
+        
+        return self.accuracy, None
 
     def trainPredict(self, label_col: str):
         self.trainModel(label_col=label_col)
