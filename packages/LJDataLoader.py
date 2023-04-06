@@ -55,10 +55,10 @@ class LJDataLoader:
             multiclass_labels = multiclass_labels.squeeze()
             labels = np.where(multiclass_labels == 0, 0, 1) #in the future, may need to double check that this works for varying column orders
             architectures = [agg_cols[id] for i in multiclass_labels]
-            return pd.DataFrame({'path':chosen_data, 'label':labels, 'multiclass_label':multiclass_labels, 'type':self.metadata['type'], 'id':self.metadata['id']}, 'architecture':architectures)
+            return pd.DataFrame({'path':chosen_data, 'label':labels, 'multiclass_label':multiclass_labels, 'type':self.metadata['type'], 'id':self.metadata['id'], 'architecture':architectures})
 
-        filter_df = self.metadata[agg_cols+['type']].copy()
-        output = pd.melt(filter_df, id_vars=['type'], value_vars=agg_cols, value_name='path', var_name='architecture')
+        filter_df = self.metadata[agg_cols+['type', 'id']].copy()
+        output = pd.melt(filter_df, id_vars=['type', 'id'], value_vars=agg_cols, value_name='path', var_name='architecture')
         output['label'] = np.where(output['architecture']==real_col, 0, 1)
         multiclass_map = {k: v for v, k in enumerate(agg_cols)}
         output['multiclass_label'] = output['architecture'].map(multiclass_map)

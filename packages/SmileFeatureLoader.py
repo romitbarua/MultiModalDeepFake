@@ -27,8 +27,6 @@ class smileFeatureLoader:
         
     def _load_smile_features(self):
 
-        tqdm.pandas()
-
         merged_df = pd.DataFrame()
         
         #iterate through all the unique path keys in the provided df
