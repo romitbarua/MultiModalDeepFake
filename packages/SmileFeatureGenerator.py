@@ -36,7 +36,11 @@ class smileFeatureGenerator:
         for i in tqdm(range(len(self.wav_list))):
             
             file_path = os.path.join(self.data_path, self.wav_list[i])
-            features = self.feature_extractor.process_file(file_path).reset_index()
+            try:
+                features = self.feature_extractor.process_file(file_path).reset_index()
+            except:
+                print("Error processing file: {}".format(file_path))
+                continue
 
             duration = features['end'] - features['start']
             duration = duration.astype('timedelta64[ms]')/1000

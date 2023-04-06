@@ -1,6 +1,17 @@
 import numpy as np
 import pandas as pd
 
+def generateTitaNetEmbeddings(model, paths, normalize):
+    
+        embeddings = np.array([model.get_embedding(file_path).cpu().detach().numpy()[0] for file_path in paths])
+        
+        if normalize:
+            raise NotImplementedError
+            #embeddings = normalize(embeddings)
+        
+        return embeddings
+    
+
 class AudioEmbeddingsManager:
 
     def __init__(self, model, data) -> None:
@@ -17,14 +28,8 @@ class AudioEmbeddingsManager:
 
 
     def generateEmbeddings(self, normalize):
-
-        embeddings = np.array([self.model.get_embedding(file_path).cpu().detach().numpy()[0] for file_path in self.data['path']])
         
-        if normalize:
-            raise NotImplementedError
-            #embeddings = normalize(embeddings)
-        
-        return embeddings
+        return generateTitaNetEmbeddings(self.model, self.data['path'], normalize)
 
 
 
