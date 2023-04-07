@@ -35,13 +35,19 @@ class smileFeatureLoader:
             #load the precomputed smile features for files in the path key
             csv_path = self.file_mappings[path_key]
             right_df = pd.read_csv(csv_path)
+            right_df = right_df.rename(columns={'file':'path'})
             
             #create the left df by filtering the provided df by the path key
             left_df = self.df[self.df.path_keys == path_key]
 
             #merge the left and right dfs
-            merged_df = pd.concat([merged_df, pd.merge(left_df, right_df, left_on='path', right_on='file', how='left')], axis=0)
+            merged_df = pd.concat([merged_df, pd.merge(left_df, right_df, on='path' , how='left')], axis=0).reset_index(drop=True)
 
         return merged_df
+    
+    def return_merged_df(self):
+        
+        return self.merged_df.drop(columns=['path_keys']).dropna()
+    
 
         

@@ -28,7 +28,7 @@ base_path = "/home/ubuntu"
 class smileFeatureSelectorBase:
 
     def __init__(self, df, 
-                 metadata=['id', 'path', 'split', 'type', 'label', 'multiclass_label', 'duration(seconds)'], 
+                 metadata=['type', 'id', 'architecture', 'path', 'label', 'multiclass_label', 'duration(seconds)'], 
                  standardize: bool = True) -> None:
 
         print('Initializing data...')
@@ -40,9 +40,9 @@ class smileFeatureSelectorBase:
 
         #do we need the test data?
 
-        self.train_df = self.data[self.data['split'] == 'train'].copy()
-        self.dev_df = self.data[self.data['split'] == 'dev'].copy()
-        self.test_df = self.data[self.data['split'] == 'test'].copy()
+        self.train_df = self.data[self.data['type'] == 'train'].copy()
+        self.dev_df = self.data[self.data['type'] == 'dev'].copy()
+        self.test_df = self.data[self.data['type'] == 'test'].copy()
 
         ## standardize the features inside the train, dev, and test sets for the cols_to_scale columns
 
@@ -66,7 +66,7 @@ class smileFeatureSelectorBase:
 class smileFeatureSelectorBruteForce(smileFeatureSelectorBase):
 
     def __init__(self, df, 
-                 metadata=['id', 'path', 'split', 'type', 'label', 'multiclass_label', 'duration(seconds)'], 
+                 metadata=['type', 'id', 'architecture', 'path', 'label', 'multiclass_label', 'duration(seconds)'], 
                  standardize: bool = True,
                  model=LogisticRegression()):
         """
@@ -89,15 +89,21 @@ class smileFeatureSelectorBruteForce(smileFeatureSelectorBase):
 
         #create a bffs dataframe to store the results
         self.bffs_data = pd.DataFrame(self.all_features, columns=['features'])
+        
+        if isinstance(self.bffs_archs, list):
+            
+            #iterate through each architecture and run bffs
+            for arch in self.bffs_archs:
+                print("\nRunning for {} architecture\n".format(arch))
+                self.bffs_data[arch] = self._run_bffs(arch)
 
-        #iterate through each architecture and run bffs
-        for arch in self.bffs_archs:
-            print("\nRunning for {} architecture\n".format(arch))
-            self.bffs_data[arch] = self._run_bffs(arch)
-
-        #run bffs for all architectures
-        print("\nRunning for all architectures\n")
-        self.bffs_data['all_archs'] = self._run_bffs(self.bffs_archs)
+            #run bffs for all architectures
+            print("\nRunning for all architectures\n")
+            self.bffs_data['all_archs'] = self._run_bffs(self.bffs_archs)
+        
+        elif isinstance(self.bffs_archs, str):
+            print("\nRunning for {} architecture\n".format(archs))
+            self.bffs_data[arch] = self._run_bffs(archs)
 
         print("\nBrute force feature selection data generated.\nAll data stored in self.bffs_data.\n")
 
@@ -107,12 +113,12 @@ class smileFeatureSelectorBruteForce(smileFeatureSelectorBase):
         """
         #checks to see if arch is a list of architectures
         if isinstance(arch, list):
-            trdf = self.train_df[self.train_df.type.isin(arch)]
-            dvdf = self.dev_df[self.dev_df.type.isin(arch)]
+            trdf = self.train_df[self.train_df.architecture.isin(arch)]
+            dvdf = self.dev_df[self.dev_df.architecture.isin(arch)]
         #for each individual architecture
         else:
-            trdf = self.train_df[self.train_df.type==arch]
-            dvdf = self.dev_df[self.dev_df.type==arch]
+            trdf = self.train_df[self.train_df.architecture==arch]
+            dvdf = self.dev_df[self.dev_df.architecture==arch]
         
         #split train data into X and y
         X_train = trdf.drop(columns=self.metadata).copy()
@@ -158,7 +164,7 @@ class smileFeatureSelectorBruteForce(smileFeatureSelectorBase):
 class smileFeatureSelectFromModel(smileFeatureSelectorBase):
 
     def __init__(self, df, 
-                 metadata=['id', 'path', 'split', 'type', 'label', 'multiclass_label', 'duration(seconds)'], 
+                 metadata=['type', 'id', 'architecture', 'path', 'label', 'multiclass_label', 'duration(seconds)'], 
                  standardize: bool = True,
                  model=RandomForestClassifier()):
         """
@@ -179,12 +185,12 @@ class smileFeatureSelectFromModel(smileFeatureSelectorBase):
         if not arch=='all_archs':
             #checks to see if arch is a list of architectures
             if isinstance(arch, list):
-                trdf = self.train_df[self.train_df.type.isin(arch)]
-                dvdf = self.dev_df[self.dev_df.type.isin(arch)]
+                trdf = self.train_df[self.train_df.architecture.isin(arch)]
+                dvdf = self.dev_df[self.dev_df.architecture.isin(arch)]
             #for each individual architecture
             else:
-                trdf = self.train_df[self.train_df.type==arch]
-                dvdf = self.dev_df[self.dev_df.type==arch]
+                trdf = self.train_df[self.train_df.architecture==arch]
+                dvdf = self.dev_df[self.dev_df.architecture==arch]
         else:
             trdf = self.train_df
             dvdf = self.dev_df
@@ -216,7 +222,7 @@ class smileFeatureSelectFromModel(smileFeatureSelectorBase):
 class smileUnivariateFeatureSelector(smileFeatureSelectorBase):
 
     def __init__(self, df, 
-                 metadata=['id', 'path', 'split', 'type', 'label', 'multiclass_label', 'duration(seconds)'], 
+                 metadata=['type', 'id', 'architecture', 'path', 'label', 'multiclass_label', 'duration(seconds)'], 
                  standardize: bool = True):
         """
         Initialize the smileUnivariateFeatureSelector class.
@@ -238,12 +244,12 @@ class smileUnivariateFeatureSelector(smileFeatureSelectorBase):
         if not arch=='all_archs':
             #checks to see if arch is a list of architectures
             if isinstance(arch, list):
-                trdf = self.train_df[self.train_df.type.isin(arch)]
-                dvdf = self.dev_df[self.dev_df.type.isin(arch)]
+                trdf = self.train_df[self.train_df.architecture.isin(arch)]
+                dvdf = self.dev_df[self.dev_df.architecture.isin(arch)]
             #for each individual architecture
             else:
-                trdf = self.train_df[self.train_df.type==arch]
-                dvdf = self.dev_df[self.dev_df.type==arch]
+                trdf = self.train_df[self.train_df.architecture==arch]
+                dvdf = self.dev_df[self.dev_df.architecture==arch]
         else:
             trdf = self.train_df
             dvdf = self.dev_df
