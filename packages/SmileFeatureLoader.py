@@ -41,13 +41,13 @@ class smileFeatureLoader:
             left_df = self.df[self.df.path_keys == path_key]
 
             #merge the left and right dfs
-            merged_df = pd.concat([merged_df, pd.merge(left_df, right_df, on='path' , how='left')], axis=0).reset_index(drop=True)
+            merged_df = pd.concat([merged_df, pd.merge(left_df, right_df, on='path')], axis=0).reset_index(drop=True)
 
         return merged_df
     
     def return_merged_df(self):
         
-        return self.merged_df.drop(columns=['path_keys']).dropna()
+        return self.merged_df.drop(columns=['path_keys'])
     
 
         

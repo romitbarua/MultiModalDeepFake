@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from packages.SavedFeatureLoader import loadFeatures
 
 SAVED_EMBEDDINGS_DIR = '/home/ubuntu/data/wavefake_data/Embeddings/16000KHz'
 
@@ -12,9 +13,6 @@ def generateTitaNetEmbeddings(model, paths, normalize):
             #embeddings = normalize(embeddings)
         
         return embeddings
-    
-def loadSavedData(paths, saved_data_dir=SAVED_EMBEDDINGS_DIR):
-    pass
 
 class AudioEmbeddingsManager:
 
@@ -31,7 +29,8 @@ class AudioEmbeddingsManager:
             feature_df = pd.concat((self.data, embeddings_df), axis=1)
             
         else:
-            pass
+            feature_df = loadFeatures(self.data.copy(), 'titanet')
+            feature_cols = set(feature_df.columns) ^ set(self.data.columns)
             
         return feature_df, feature_cols
 

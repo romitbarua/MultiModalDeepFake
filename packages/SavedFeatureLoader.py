@@ -21,7 +21,8 @@ def loadFeatures(metadata, feature_type, metadata_filepath_col='path', feature_f
         feature_df = pd.read_csv(feature_map[path][feature_type])
         filter_metadata = metadata[metadata['path_keys'] == path]
         merged_df = pd.concat([merged_df,pd.merge(filter_metadata, feature_df, how='left', left_on=metadata_filepath_col, right_on=feature_filepath_col)], axis=0).reset_index(drop=True)
-        
+    
+    merged_df = merged_df.drop(columns=['path_keys']) 
     return merged_df
         
     

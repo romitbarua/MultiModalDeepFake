@@ -10,8 +10,10 @@ base_path = '/home/ubuntu/'
 
 class PlayHTVoiceClone:
     #refresh token -- this is on GitHub
-    def __init__(self, api_credentials = {'Authorization': '4a9fa7217cd1495da8042a8677db02bc',
-                                          'X-User-ID': '1g4C32urRZNvEF3jFzkRmeQ4Qvf2'}) -> None:
+    def __init__(self, credentials_json = "/home/ubuntu/configs/playht_api_credentials.json" ) -> None:
+        
+        with open(filepath, 'r') as f:
+            api_credentials = json.load(f)
         
         self.authorization = api_credentials['Authorization']
         self.user_id = api_credentials['X-User-ID']
