@@ -2,6 +2,7 @@ from pydub import AudioSegment
 import os
 from packages.LibrosaManager import LibrosaManager 
 import soundfile as sf
+from random import randint
 
 class AudioManager:
 
@@ -148,6 +149,36 @@ class AudioManager:
                 sf.write(os.path.join(output_directory, file), resampled_audio, target_sample_rate, subtype='PCM_24')
             except Exception as e:
                 print(f'Failed to Resample: {file}')
+                print(f'Error Msg: {e}')
+                print()
+                
+    
+    def add_noise_with_snr(audio_path: str, snr_range: list = [10, 80]):
+        audio, sr = librosa.load(audio_path)
+        
+        audio_power = np.mean(audio ** 2)
+        
+        noise_snr = randint(snr_range[0], snr_range[1])
+        noise_power = audio_power / (10 ** (noise_snr / 10))
+        noise = np.random.normal(scale=np.sqrt(noise_power), size=len(audio))
+        noisy_audio = audio + noise
+
+        return noisy_audio
+    
+    def launderAudioDirectory(self, input_directory: str, output_directory: str, noise_type: str = 'random_gaussian', replace_existing: bool = False):
+        
+        for file in os.listdir(input_directory):
+            if not replace_existing:
+                if os.path.isfile(os.path.join(output_directory, file)):
+                    continue
+            
+            try:
+                if noise_type == 'random_gaussian':
+                    noisy_audio = add_noise_with_snr(audio_path=file)
+                    
+                sf.write(os.path.join(output_directory, file), noisy_audio, target_sample_rate, subtype='PCM_24')
+            except Exception as e:
+                print(f'Failed to add noise: {file}')
                 print(f'Error Msg: {e}')
                 print()
 
