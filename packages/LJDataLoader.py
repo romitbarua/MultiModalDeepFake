@@ -1,4 +1,4 @@
-from random import random
+from random import random, sample, seed
 import pandas as pd
 import numpy as np
 
@@ -29,9 +29,6 @@ class LJDataLoader:
         
         train_idx, dev_idx = int(self.metadata.shape[0]*train_perc), int(self.metadata.shape[0]*(train_perc+dev_perc))
         
-        print(self.metadata.shape[0])
-        print(train_idx, dev_idx)
-        
         self.metadata.loc[:train_idx, 'type'] = 'train'
         self.metadata.loc[train_idx:dev_idx, 'type'] = 'dev'
         self.metadata.loc[dev_idx:, 'type'] = 'test'
@@ -44,7 +41,7 @@ class LJDataLoader:
 
         self.metadata[target_col] = self.metadata.apply(lambda row: randomlySelectCols(row), axis=1)
 
-    def generateFinalDataFrame(self, real_col: str, fake_cols: list, single_id_entry: bool = False):
+    def generateFinalDataFrame(self, real_col: str, fake_cols: list, single_id_entry: bool = False, balanced: bool = False):
 
         agg_cols = [real_col] + fake_cols
 
@@ -63,6 +60,27 @@ class LJDataLoader:
         multiclass_map = {k: v for v, k in enumerate(agg_cols)}
         output['multiclass_label'] = output['architecture'].map(multiclass_map)
         #output = output.drop(columns=['architecture'])
+        
+        ### SB CODE UPDATE ###
+        if balanced:
+            seed(4)
+            
+            binary_class_labels = output['label']
+            real_indices = list(np.where(binary_class_labels==0)[0])
+            fake_indices = list(np.where(binary_class_labels==1)[0])
+            # Apply random sampling to rebalance data
+            # NOTE: currently using equal p(sample) from each all fake samples.
+            # E.g. we just random sample from all with a 1 class. 
+            # We can explore making this more advanced e.g. 
+            if len(real_indices) < len(fake_indices):
+                fake_indices = sample(fake_indices, len(real_indices))
+            elif len(real_indices) > len(fake_indices):
+                real_indices = sample(real_indices, len(fake_indices))
+
+            output = output.iloc[real_indices+fake_indices, :].sort_index()
+            #output['balanced_label']
+            
+        ### END ###
         return output
     
 
