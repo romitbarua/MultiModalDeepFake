@@ -68,19 +68,19 @@ class LJDataLoader:
             binary_class_labels = output['label']
             real_indices = list(np.where(binary_class_labels==0)[0])
             fake_indices = list(np.where(binary_class_labels==1)[0])
+            
             # Apply random sampling to rebalance data
             # NOTE: currently using equal p(sample) from each all fake samples.
             # E.g. we just random sample from all with a 1 class. 
-            # We can explore making this more advanced e.g. 
             if len(real_indices) < len(fake_indices):
                 fake_indices = sample(fake_indices, len(real_indices))
             elif len(real_indices) > len(fake_indices):
                 real_indices = sample(real_indices, len(fake_indices))
 
             output = output.iloc[real_indices+fake_indices, :].sort_index()
-            #output['balanced_label']
             
         ### END ###
+        
         return output
     
 

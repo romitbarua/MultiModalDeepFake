@@ -181,5 +181,11 @@ class AudioManager:
                 print(f'Failed to add noise: {file}')
                 print(f'Error Msg: {e}')
                 print()
+                
+        # RB - TO ADD: Gauthams integrated, clean up full pipeline, finish laundering function
+        # SB - LAUNDERING: add random assignment to bools of sub conditions (gaussian noise, transcode, neither - conf matrix)
+        # Sb - Store and output the bools to dictionary with files. 
+        # SB - Iterate through original paths and save them to a new file- wavefake style. 'laundered_16k...' 
+        # SB - Hyperparam tune for Uberduck - Sarah 
 
 
