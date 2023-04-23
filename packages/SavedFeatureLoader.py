@@ -7,9 +7,12 @@ from pathlib import Path
 import json
 
 FEATURE_MAP_PATH = '/home/ubuntu/data/FeatureMap.json'
+VALID_FEATURE_TYPES = ['titanet', 'openSmile']
 
 
 def loadFeatures(metadata, feature_type, metadata_filepath_col='path', feature_filepath_col='path', feature_map_path=FEATURE_MAP_PATH):
+    
+    assert feature_type in VALID_FEATURE_TYPES, f'Please ensure that {feature_type} is a valid feature type'
     
     metadata['path_keys'] = metadata['path'].apply(os.path.dirname)
     present_paths = metadata['path_keys'].unique().tolist()

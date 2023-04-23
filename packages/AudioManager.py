@@ -167,13 +167,24 @@ class AudioManager:
     
     def launderAudioDirectory(self, input_directory: str, output_directory: str, noise_type: str = 'random_gaussian', replace_existing: bool = False):
         
+        # Loop through files 
         for file in os.listdir(input_directory):
             if not replace_existing:
                 if os.path.isfile(os.path.join(output_directory, file)):
                     continue
             
             try:
-                if noise_type == 'random_gaussian':
+                # Assign random conditions
+                conditions = {'gaussian_noise':np.NaN, 'transcode':np.NaN, 'gaussian_noise_and_transcode':np.NaN, 'neither':np.NaN}
+                random_bools = [0 for item in range(len(conditions)-1)] + [1]
+                assignments = random.sample(random_bools, 4)
+
+                for i in range(len(conditions)):
+                    key = list(conditions.keys())[i]
+                    conditions[key] = assignments[i]
+                
+                # Apply random conditions
+                if 'gaussian_noise' in :
                     noisy_audio = add_noise_with_snr(audio_path=file)
                     
                 sf.write(os.path.join(output_directory, file), noisy_audio, target_sample_rate, subtype='PCM_24')
