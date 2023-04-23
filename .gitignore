@@ -7,7 +7,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 .DS_Store
-.icloud
+*.icloud
 
 # C extensions
 *.so
