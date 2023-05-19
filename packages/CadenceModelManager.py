@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import scipy.stats as stats
 from numpy import diff
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.linear_model import LogisticRegression
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -20,20 +21,20 @@ from scipy import signal
 
 class CadenceModelManager:
 
-    def __init__(self, data, silence_threshold: float = 0.005, low_pass_filter_cutoff: int = 10, trunc_window_size: int = 100) -> None:
+    def __init__(self, data, silence_threshold: float = 0.005, low_pass_filter_cutoff: int = 10, trunc_window_size: int = 100) -> None: # Silence threshold assumed 0.5% 
 
         self.data = data
-        self.silence_threshold = silence_threshold
+        #self.silence_threshold = silence_threshold
         self.low_pass_filter_cutoff = low_pass_filter_cutoff
-        self.window_size = trunc_window_size
+        #self.window_size = trunc_window_size
         self.sr = sr = librosa.load(self.data['path'][0])[1]
 
         ## RB COMMENT: FOR NOW I AM STORING THE NORMALIZED AND TRUNCATED AUDIO, BUT MAYBE WE WANT TO MOVE TO A SINGLE VAR
         ## FROM A SPACE EFFICIENCY PERSPECTIVE (ESPECIALLY AS OUR LJ DATASET GROWS, IT MAY BE A LOT TO SAVE IN MEMORY)
         self.normalized_audio = []
         self.truncated_audio = []
-
-    def run_cadence_feature_extraction_pipeline(self):
+        
+    def generate_features(self, window_size, silence_threshold):
         
         ## PREPROCESS
         
@@ -56,23 +57,28 @@ class CadenceModelManager:
         print('Normalizing amplitudes')
         self.normalize_audio_amplitudes()
         
+        # Hyperparam tune 
+        #window_size, silence_threshold = self.hyperparam_search()
+        
+        # Save down the best params and proceed 
+        
         ## RB COMMENT: DO WE NEED THE START_IDS AND END_IDS? NOT SEEING THEM USED ANYWHERE ELSE
         # Truncate silences
         print('Truncating silences')
-        start_ids, end_ids = self.truncate_silences()
+        start_ids, end_ids = self.truncate_silences(window_size, silence_threshold)
         
         ## FEATURE ENGINEERING
         # Extract pauses 
         print('Extracting pauses')
-        pauses = self.run_all_files(self.get_silence)
+        pauses = self.run_all_files(self.get_silence, window_size, silence_threshold)
 
         # Extract pause spreads
         print('Extracting pause spreads')
-        silence_spreads = self.run_all_files(self.get_silence_spread)
+        silence_spreads = self.run_all_files(self.get_silence_spread, window_size, silence_threshold)
 
         # Extract amplitude and derivative
         print('Extracting amplitude features')
-        amps = self.run_all_files(self.get_amplitude)
+        amps = self.run_all_files(self.get_amplitude, window_size, silence_threshold)
         
         ## FEATURE CONSOLIDATION
         # Create dataframe 
@@ -88,16 +94,29 @@ class CadenceModelManager:
         
         print('Complete')
         
+        return features
+        
+
+    def run_cadence_feature_extraction_pipeline(self, window_size, silence_threshold, scaler = None):
+        
+
+        features = self.generate_features(window_size, silence_threshold)
         
 
         full_df = pd.concat((self.data, features), axis=1)
         
-        scaler = MinMaxScaler()
-        full_df.loc[full_df['type'] == 'train', list(features.columns)] = scaler.fit_transform(full_df.loc[full_df['type']=='train', list(features.columns)])
-        full_df.loc[~(full_df['type'] == 'train'), list(features.columns)] = scaler.transform(full_df.loc[~(full_df['type']=='train'), list(features.columns)])
+        if scaler is None:
+            scaler = MinMaxScaler()
+            full_df.loc[full_df['type'] == 'train', list(features.columns)] = scaler.fit_transform(full_df.loc[full_df['type']=='train', list(features.columns)])
+            full_df.loc[~(full_df['type'] == 'train'), list(features.columns)] = scaler.transform(full_df.loc[~(full_df['type']=='train'), list(features.columns)])
+            return full_df, list(features.columns), scaler
+        else:
+            full_df.loc[:, list(features.columns)] = scaler.transform(full_df.loc[:, list(features.columns)])
+            return full_df, list(features.columns), None
+            
                                                                                    
 
-        return full_df, list(features.columns)
+        
 
 
     ################################################## MODEL TESTING SCRIPT ##################################################
@@ -210,7 +229,7 @@ class CadenceModelManager:
             normalized_sample = sample/max_abs
             self.normalized_audio.append(normalized_sample)
 
-    def truncate_silences(self, counter=0):
+    def truncate_silences(self, window_size, silence_threshold, counter=0):
 
         start_ids = []
         end_ids = []
@@ -221,15 +240,15 @@ class CadenceModelManager:
                 print(f'Truncating audio {counter}/{len(self.normalized_audio)} ({round(counter*100/len(self.normalized_audio))}%)')
 
             for j in range(len(audio)):
-                roll_average = np.mean(np.abs(audio[j:j+self.window_size]))
-                if roll_average > self.silence_threshold:
+                roll_average = np.mean(np.abs(audio[j:j+window_size]))
+                if roll_average > silence_threshold:
                     truncation_id_start = j
                     break
 
             for j in reversed(range(len(audio))):
-                roll_average = np.mean(np.abs(audio[j-self.window_size:j]))
-                if roll_average > self.silence_threshold:
-                    truncation_id_end = j-self.window_size
+                roll_average = np.mean(np.abs(audio[j-window_size:j]))
+                if roll_average > silence_threshold:
+                    truncation_id_end = j-window_size
                     break
             self.truncated_audio.append(audio[truncation_id_start:truncation_id_end])
             start_ids.append(truncation_id_start)
@@ -240,10 +259,10 @@ class CadenceModelManager:
     def moving_average(self, x, w):
         return np.convolve(x, np.ones(w), 'valid') / w
 
-    def get_silence(self, audio):
-        thresh = max(abs(audio))*self.silence_threshold
+    def get_silence(self, audio, window_size, silence_threshold):
+        thresh = max(abs(audio))*silence_threshold
         
-        moving_avg = self.moving_average(abs(audio), 100)
+        moving_avg = self.moving_average(abs(audio), window_size) # Window size = 100 
 
         silent = np.where(abs(moving_avg) < thresh)
         voiced = np.where(abs(moving_avg) >= thresh)
@@ -254,11 +273,11 @@ class CadenceModelManager:
 
         return {'pct_pause':pct_pause, 'pct_voiced': pct_voiced, 'ratio_pause_voiced': ratio_pause_voiced}
 
-    def get_silence_spread(self, audio):
+    def get_silence_spread(self, audio, window_size, silence_threshold):
 
-        thresh = max(abs(audio))*self.silence_threshold
+        thresh = max(abs(audio))*silence_threshold
         
-        moving_avg = self.moving_average(abs(audio), 100)
+        moving_avg = self.moving_average(abs(audio), window_size) # Window size = 100 
 
         silent_windows = np.where(moving_avg < thresh)
         moving_avg[silent_windows] = 0
@@ -311,10 +330,10 @@ class CadenceModelManager:
         return r_results, f_results
     '''
 
-    def run_all_files(self, function):
+    def run_all_files(self, function, window_size, silence_threshold):
         results = []
         for item in self.truncated_audio:
-            results.append(function(item))
+            results.append(function(item, window_size, silence_threshold))
         return results
 
     def filter_signal(self, audio):
@@ -325,7 +344,7 @@ class CadenceModelManager:
         
         return smoothed_signal
 
-    def get_amplitude(self, audio):
+    def get_amplitude(self, audio, window_size, silence_threshold):
 
         abs_audio = abs(audio)
         smoothed_signal = self.filter_signal(abs_audio)
@@ -336,6 +355,86 @@ class CadenceModelManager:
             
         return {'abs_deriv_amplitude':abs(deriv_amplitude), 'mean_amplitude':mean_amplitude}
     
+    
+    def hyperparam_search(self, window_size_options = [50, 100, 150, 250, 500, 750, 1000, 2000] , silence_threshold_options = np.linspace(0.005, 0.1, 20), model = 'logistic_regression', scaler = None):
+        
+        window_sizes = []
+        silence_thresholds = []
+        performances = []
+        
+        input_audios = self.normalized_audio
+        input_labels = self.data['label']
+        
+        for window_size in window_size_options:
+            print(f'Window size: {window_size}')
+            for silence_threshold in silence_threshold_options:
+        
+                ########### Generate features ###########
+                start_ids, end_ids = self.truncate_silences(window_size, silence_threshold)
+
+                #print('Tuning pauses')
+                pauses = self.run_all_files(self.get_silence, window_size, silence_threshold)
+
+                # Extract pause spreads
+                #print('Tuning pause spreads')
+                silence_spreads = self.run_all_files(self.get_silence_spread, window_size, silence_threshold)
+
+                # Extract amplitude and derivative
+                #print('Tuning amplitude features')
+                amps = self.run_all_files(self.get_amplitude, window_size, silence_threshold)
+
+                ## FEATURE CONSOLIDATION
+                # Create dataframe 
+                #print('Creating dataframe')
+                features = pd.DataFrame({
+                                    'pause_ratio':[item['ratio_pause_voiced'] for item in pauses], 
+                                    'pause_mean':[item['mean_of_silences'] for item in silence_spreads], 
+                                    'pause_std':[item['spread_of_silences'] for item in silence_spreads],  
+                                    'n_pauses':[item['n_pauses'] for item in silence_spreads], 
+                                    'amp_deriv':[item['abs_deriv_amplitude'] for item in amps],
+                                    'amp_mean':[item['mean_amplitude'] for item in amps]
+                                    })
 
 
+                full_df = pd.concat((self.data, features), axis=1)
 
+                if scaler is None:
+                    scaler = MinMaxScaler()
+                    full_df.loc[full_df['type'] == 'train', list(features.columns)] = scaler.fit_transform(full_df.loc[full_df['type']=='train', list(features.columns)])
+                    full_df.loc[~(full_df['type'] == 'train'), list(features.columns)] = scaler.transform(full_df.loc[~(full_df['type']=='train'), list(features.columns)])
+                else:
+                    full_df.loc[:, list(features.columns)] = scaler.transform(full_df.loc[:, list(features.columns)])
+
+                ######## END ########
+
+                #print(full_df.columns)
+                #print(full_df.head())
+
+                X_train = full_df[['pause_ratio', 'pause_mean', 'pause_std', 'n_pauses', 'amp_deriv', 'amp_mean']][full_df['type']=='train']
+                y_train = full_df['label'][full_df['type']=='train']
+                X_dev = full_df[['pause_ratio', 'pause_mean', 'pause_std', 'n_pauses', 'amp_deriv', 'amp_mean']][full_df['type']=='dev']
+                y_dev = full_df['label'][full_df['type']=='dev']
+                
+                #if nans in full_df:
+                #    
+                #    continue
+
+                if model == 'logistic_regression':
+
+                    clf = LogisticRegression(random_state=0).fit(X_train, y_train)
+                    score = clf.score(X_dev, y_dev)
+                    
+                    print(f'Windowsize {window_size}, silence_threshold {silence_threshold}: {score}')
+                    
+                window_sizes.append(window_size)
+                silence_thresholds.append(silence_threshold)
+                performances.append(score)
+
+        
+        optimal_window_size = window_sizes[np.argmax(performances)]
+        optimal_silence_threshold = silence_thresholds[np.argmax(performances)]
+        
+        print(f'OPTIMAL PARAMS SELECTED: window size: {optimal_window_size}, silence threshold: {optimal_silence_threshold}')
+        
+        return optimal_window_size, optimal_silence_threshold
+        

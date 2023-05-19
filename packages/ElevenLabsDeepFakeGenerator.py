@@ -29,7 +29,7 @@ class ElevenLabsDeepFakeGenerator(BaseDeepFakeGenerator):
                                                             source_col=source_col,
                                                             transcript_col=transcript_col,
                                                             punc_to_remove=punc_to_remove)
-
+        print(file_names)
         if convert_audio_to_format:
             audio_manager = AudioManager()
 

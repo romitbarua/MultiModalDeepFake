@@ -73,6 +73,16 @@ class ModelManager:
         # Calculate accuracy and log loss
         self.accuracy = accuracy_score(self.y_test, self.y_pred)
         
+        self.class_accuracy = {}
+        cls_y_test = self.y_test.copy()
+        cls_y_test = cls_y_test.reset_index(drop=True)
+        for cls in range(len(set(self.y_test))):
+            cls_idx = np.where(self.y_test == cls)[0]    
+            cls_test = cls_y_test[cls_idx]
+            cls_pred = self.y_pred[cls_idx]
+            self.class_accuracy[cls] = accuracy_score(cls_test, cls_pred)
+            
+        
         if self.model_name not in ['svm']:
             self.y_prob = self.model.predict_proba(self.X_test)
             self.log_loss_value = log_loss(self.y_test, self.y_prob)

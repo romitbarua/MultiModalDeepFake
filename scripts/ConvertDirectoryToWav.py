@@ -15,9 +15,9 @@ def main():
                              codec='aac'
                             )
     
-    #am.convertAudioDirectory(output_dir, input_format='.mp4', 
-    #                         output_format='.wav', delete_original=True,
-    #                         codec='aac'
-    #                        )
+    am.convertAudioDirectory(output_dir, input_format='.mp4', 
+                             output_format='.wav', delete_original=True,
+                             codec='aac'
+                            )
 
 main()

@@ -30,7 +30,7 @@ class AudioEmbeddingsManager:
             
         else:
             feature_df = loadFeatures(self.data.copy(), 'titanet')
-            feature_cols = set(feature_df.columns) ^ set(self.data.columns)
+            feature_cols = list(set(feature_df.columns) ^ set(self.data.columns))
             
         return feature_df, feature_cols
 

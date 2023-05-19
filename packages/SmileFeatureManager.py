@@ -1,6 +1,3 @@
-from cProfile import label
-from mimetypes import init
-
 
 from packages.SavedFeatureLoader import loadFeatures
 from packages.SmileFeatureSelector import *
@@ -11,6 +8,7 @@ class SmileFeatureManager:
 
     def __init__(self, data) -> None:
         self.data = data
+        self.metadata_cols = data.columns
         self.loadSavedFeatures()
 
     def loadSavedFeatures(self):
@@ -23,12 +21,14 @@ class SmileFeatureManager:
         assert label_type in ['binary', 'multiclass'], 'Label type must be either binary or multiclass'
 
         if feature_selector_type == 'random_forest':
-            selector = smileFeatureSelectFromModel(self.feature_df)
+            selector = smileFeatureSelectFromModel(self.feature_df, metadata=list(self.metadata_cols))
 
             if label_type == 'binary':
-                return selector.select_features_binary(max_features=feature_count, return_df=True)
+                df =  selector.select_features_binary(max_features=feature_count, return_df=True)
             else:
-                return selector.select_features_multiclass(max_features=feature_count, return_df=True) 
+                df = selector.select_features_multiclass(max_features=feature_count, return_df=True) 
+                
+            return df
 
 
     

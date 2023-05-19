@@ -55,7 +55,7 @@ def process_data_for_all_archs(df, archs):
 class smileFeatureSelectorBase:
 
     def __init__(self, df, 
-                 metadata=['type', 'id', 'architecture', 'arch_filter', 'path', 'label', 'multiclass_label', 'duration(seconds)'], 
+                 metadata, 
                  standardize: bool = True) -> None:
 
         print('Initializing data...')
@@ -63,7 +63,7 @@ class smileFeatureSelectorBase:
         self.data = df
         self.metadata = metadata
         self.all_features = self.data.drop(columns=self.metadata).columns
-
+        
         #do we need the test data?
 
         self.train_df = self.data[self.data['type'] == 'train'].copy()
@@ -218,7 +218,7 @@ class smileFeatureSelectorBruteForce(smileFeatureSelectorBase):
 class smileFeatureSelectFromModel(smileFeatureSelectorBase):
 
     def __init__(self, df, 
-                 metadata=['type', 'id', 'architecture', 'arch_filter', 'path', 'label', 'multiclass_label', 'duration(seconds)'], 
+                 metadata,
                  real_col='Real',
                  fake_cols=['ElevenLabs', 'UberDuck', 'RandWaveFake'], 
                  standardize: bool = True,
@@ -272,8 +272,8 @@ class smileFeatureSelectFromModel(smileFeatureSelectorBase):
         else:
             
             #approach that treats all architectures together while selecting features
-            trdf = self.train_df[self.train_df.arch_filter.isin(self.fake_cols)]
-            dvdf = self.dev_df[self.dev_df.arch_filter.isin(self.fake_cols)]
+            trdf = self.train_df[self.train_df.architecture.isin(self.fake_cols)]
+            dvdf = self.dev_df[self.dev_df.architecture.isin(self.fake_cols)]
             sfm_features = self._run_sfm(trdf, dvdf, max_features)
             self.binary_feature_set = set(sfm_features)
             
@@ -286,7 +286,7 @@ class smileFeatureSelectFromModel(smileFeatureSelectorBase):
             return list(self.binary_feature_set)
 
         if return_df:
-            return self.data[self.data.columns.intersection(self.metadata + list(self.binary_feature_set))]
+            return self.data[self.data.columns.intersection(self.metadata + list(self.binary_feature_set))], list(self.binary_feature_set)
         
     def select_features_multiclass(self, max_features=10, archs='all_archs', return_df=False, print_features=True, return_features=False):
 
@@ -322,7 +322,7 @@ class smileFeatureSelectFromModel(smileFeatureSelectorBase):
             return list(self.multiclass_feature_set)
 
         if return_df:
-            return self.data[self.data.columns.intersection(self.metadata + list(self.multiclass_feature_set))]
+            return self.data[self.data.columns.intersection(self.metadata + list(self.multiclass_feature_set))], list(self.multiclass_feature_set)
 
 
     
