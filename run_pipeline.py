@@ -2,7 +2,7 @@ import sys
 sys.path.append("/home/ubuntu/MultiModalDeepFake")
 import pandas as pd
 import mlflow
-import experiment_pipeline as ep
+import packages.experiment_pipeline as ep
 import time
 
 def main(experiment_name, open_smile_feature_count, create_df_artifact):
