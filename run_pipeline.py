@@ -3,18 +3,21 @@ sys.path.append("/home/ubuntu/MultiModalDeepFake")
 import pandas as pd
 import mlflow
 import experiment_pipeline as ep
+import time
 
-def main(arg1, arg2):
+def main(experiment_name, open_smile_feature_count, create_df_artifact):
 
-    #set the experiment name from arg1
-    mlflow.set_experiment(arg1)
-    openSmile_feature_count=20
-    ##### set the parameters for running all models #####
-    #these could be an optional arguments from command line
+    #start timing
+    start_time = time.time()
+
+    print("\nRunning pipeline for experiment: \n", experiment_name)
+    mlflow.set_experiment(experiment_name)
+
+    print("\nopen_smile_feature_count: \n", open_smile_feature_count)
+    print("\ncreate_df_artifact: \n", create_df_artifact)
+
+    #set the models to run
     models = ['logreg', 'random_forest']
-
-    #boolean for logging df artifact
-    create_df_artifact = True if arg2 == "create_df_artifact" else False
 
     ####################################
     ##### run for unlaundered data #####
@@ -80,13 +83,23 @@ def main(arg1, arg2):
 if __name__ == "__main__":
 
     # Check if the correct number of arguments are provided
-    if len(sys.argv) < 2 or len(sys.argv) > 3:
-        print("Usage: python3 run_pipeline.py <experiment_name> [create_df_artifact]")
+    if len(sys.argv) < 2 or len(sys.argv) > 5:
+        print("Usage: python3 run_pipeline.py <experiment_name> [create_df_artifact] [open_smile_feature_count=<value>]")
         sys.exit(1)
 
     # Retrieve the command-line arguments
-    arg1 = sys.argv[1]
-    arg2 = sys.argv[2] if len(sys.argv) == 3 else None
+    experiment_name = sys.argv[1]
+    arg2 = sys.argv[2] if len(sys.argv) >= 3 else None
+
+    #boolean for logging df artifact
+    create_df_artifact = True if arg2 == "create_df_artifact" else False
+    
+    #set default value for open_smile_feature_count
+    open_smile_feature_count = 10
+    # Extract open_smile_feature_count if provided
+    for arg in sys.argv[3:]:
+        if arg.startswith("open_smile_feature_count="):
+            open_smile_feature_count = int(arg.split("=")[1])
 
     # Call the main function with the arguments
-    main(arg1, arg2)
+    main(experiment_name, open_smile_feature_count, create_df_artifact)

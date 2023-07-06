@@ -126,6 +126,12 @@ class ExperimentPipeline:
             for label_type in ['label', 'multiclass_label']:
                 for feature_method, feature_data in self.feature_store.items():
 
+                    #condition to skip certain feature methods for certain label types
+                    if feature_method == 'openSmile_binary' and label_type == 'multiclass_label':
+                        break
+                    if feature_method == 'openSmile_multiclass' and label_type == 'label':
+                        break
+
                     #generate mlflow run details
                     run_tags, run_name = self._generate_mlflow_run_details(run_tags, run_name_prefix, model_type, label_type, feature_method)
 
