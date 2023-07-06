@@ -8,7 +8,7 @@ def generateTitaNetEmbeddings(model, paths, normalize):
     
         embeddings = np.array([model.get_embedding(file_path).cpu().detach().numpy()[0] for file_path in paths])
         
-        if normalize:
+        if normalize: ## SB_COMMENT: Why do we no longer need to normalize ?
             raise NotImplementedError
             #embeddings = normalize(embeddings)
         
@@ -22,10 +22,10 @@ class AudioEmbeddingsManager:
 
     def generateFeatureDf(self, normalize: bool = False, regenerate_embeddings: bool = False):
         
-        if regenerate_embeddings:
-            embeddings_df = pd.DataFrame(self.generateEmbeddings(normalize))
+        if regenerate_embeddings: ## SB_COMMENT: why would we ever need to regenerate? Is there an overwrite later?
+            embeddings_df = pd.DataFrame(self.generateEmbeddings(normalize)) ## SB_COMMENT: can probably get rid of the normalize arg now
 
-            feature_cols = list(embeddings_df.columns)
+            feature_cols = list(embeddings_df.columns) ## SB_COMMENT: would there be any benefit in trying less than 192 embeddings?
             feature_df = pd.concat((self.data, embeddings_df), axis=1)
             
         else:

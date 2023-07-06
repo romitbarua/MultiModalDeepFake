@@ -5,10 +5,14 @@ import pandas as pd
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.optimize import brentq
+from scipy.interpolate import interp1d
 
-VALID_MODELS = ['svm', 'logreg', 'knn']
+VALID_MODELS = ['svm', 'logreg', 'knn', 'decision_tree', 'random_forest']
 
 class ModelManager:
 
@@ -39,6 +43,17 @@ class ModelManager:
                 self.model = KNeighborsClassifier()
             else:
                 self.model = KNeighborsClassifier(**params)
+        elif self.model_name == 'decision_tree':
+            if params is None:
+                self.model = DecisionTreeClassifier()
+            else:
+                self.model = DecisionTreeClassifier(**params)
+        elif self.model_name == 'random_forest':
+            if params is None:
+                self.model = RandomForestClassifier(random_state=12)
+            else:
+                self.model = RandomForestClassifier(**params)
+            
 
     def _splitDataframe(self, merge_train_dev: bool):
 
@@ -51,14 +66,17 @@ class ModelManager:
 
         self.test = self.data[(self.data.type == 'test')]         
         
-        ## TEMP SOLUTION
-        self.train = self.train.dropna()
-        self.test = self.test.dropna()
+
+        #there are a few audio clips (<10) without embeddings, so we are dropping those
+        #self.train = self.train.dropna()
+        #self.test = self.test.dropna()
 
     def trainModel(self, label_col: str):
         # Train the model using the training data
         self.y_train = self.train[label_col]
         self.X_train = self.train[self.feature_cols].copy()
+        
+        self.X_train.to_csv('/home/ubuntu/features.csv', index=False)
 
         self.model.fit(self.X_train, self.y_train)
 
@@ -77,28 +95,36 @@ class ModelManager:
         cls_y_test = self.y_test.copy()
         cls_y_test = cls_y_test.reset_index(drop=True)
         for cls in range(len(set(self.y_test))):
+            
+            cls_name = self.data.loc[self.data[label_col] == cls, 'architecture'].unique()[0]
+            
             cls_idx = np.where(self.y_test == cls)[0]    
             cls_test = cls_y_test[cls_idx]
             cls_pred = self.y_pred[cls_idx]
-            self.class_accuracy[cls] = accuracy_score(cls_test, cls_pred)
+            self.class_accuracy[cls_name] = accuracy_score(cls_test, cls_pred)
             
+        self.eer_score, self.eer_threshold = None, None
         
         if self.model_name not in ['svm']:
             self.y_prob = self.model.predict_proba(self.X_test)
             self.log_loss_value = log_loss(self.y_test, self.y_prob)
-
-            return self.accuracy, self.log_loss_value
+            
+            if 'multi' not in label_col:
+                self.eer_score, self.eer_threshold = self.calculate_eer()
+                
+            return self.accuracy, self.log_loss_value, self.eer_score, self.eer_threshold
         
-        return self.accuracy, None
+        self.log_loss_value = None
+        return self.accuracy, self.log_loss_value, self.eer_score, self.eer_threshold
 
     def trainPredict(self, label_col: str):
         self.trainModel(label_col=label_col)
-        acc, log_loss = self.predict(label_col=label_col)
-        return acc, log_loss
+        acc, log_loss, eer_score, eer_threshold  = self.predict(label_col=label_col)
+        return acc, log_loss, eer_score, eer_threshold
 
     def plotRocCurve(self):
         # Create a ROC curve plot
-        fpr, tpr, _ = roc_curve(self.y_test, self.y_prob)
+        fpr, tpr, _ = roc_curve(self.y_test, self.y_prob[:, 1])
         plt.plot(fpr, tpr)
         plt.xlabel('False Positive Rate')
         plt.ylabel('True Positive Rate')
@@ -112,3 +138,22 @@ class ModelManager:
         plt.ylabel('Frequency')
         plt.title('Test Set Probability Score Distribution')
         plt.show()
+
+
+
+    def calculate_eer(self):
+
+
+        # Calculate the False Positive Rate (FPR) and True Positive Rate (TPR)
+        fpr, tpr, thresholds = roc_curve(self.y_test, self.y_prob[:,1], pos_label=1)
+
+        # Interpolate the FPR and TPR values
+        interpolated = interp1d(fpr, tpr)
+
+        # Find the point where FAR and FRR are equal (EER)
+        eer = brentq(lambda x : 1. - x - interpolated(x), 0., 1.)
+
+        optimal_threshold = thresholds[np.nanargmin(np.abs((1. - tpr) - fpr))]
+
+        return eer, optimal_threshold
+    

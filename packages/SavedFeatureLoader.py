@@ -6,8 +6,8 @@ from tqdm import tqdm
 from pathlib import Path
 import json
 
-FEATURE_MAP_PATH = '/home/ubuntu/data/FeatureMap.json'
-VALID_FEATURE_TYPES = ['titanet', 'openSmile']
+FEATURE_MAP_PATH = '/home/ubuntu/data/FeatureMap.json' ## SB_Comment - add as global/config variable?
+VALID_FEATURE_TYPES = ['titanet', 'openSmile', 'cadence'] ## SB_Comment - What to do about cadence now?
 
 
 def loadFeatures(metadata, feature_type, metadata_filepath_col='path', feature_filepath_col='path', feature_map_path=FEATURE_MAP_PATH):

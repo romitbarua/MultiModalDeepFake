@@ -13,7 +13,7 @@ def main():
     
     home_path = '/home/ubuntu/'
     
-    folders_to_convert = [('data/wavefake_data/generated_audio/ljspeech_elevenlabs/temp','data/wavefake_data/generated_audio/ljspeech_elevenlabs/16000KHz')]
+    folders_to_convert = [('data/TIMIT_and_ElevenLabs/Original','data/TIMIT_and_ElevenLabs/16KHz')]
     
     
     

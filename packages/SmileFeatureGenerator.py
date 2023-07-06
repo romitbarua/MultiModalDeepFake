@@ -23,7 +23,7 @@ class smileFeatureGenerator:
     def _getWavList(self):
         wav_list = []
         for file_name in os.listdir(self.data_path):
-            if '.wav' in file_name:
+            if '.wav' in file_name.lower():
                 wav_list.append(file_name)
         return wav_list
     
@@ -58,4 +58,3 @@ class smileFeatureGenerator:
 
                
 
-        

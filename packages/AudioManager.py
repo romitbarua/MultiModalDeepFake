@@ -38,7 +38,7 @@ class AudioManager:
                                 bitrate: str = None,
                                 codec: str = None):
         
-        assert output_format in ['.wav', '.mp4'], f'{output_format} is an invalid output format. Please enter types: (.wav, .mp4).'
+        assert output_format in ['.wav', '.mp4'], f'{output_format} is an invalid output format. Please enter types: (.wav, .mp4).' ## SB_COMMENT: maybe i am misunderstanding the error flow but htis doesnt get triggered with incorrect input string
         
         try:
             import_audio = AudioSegment.from_file(audio_path)
@@ -66,7 +66,7 @@ class AudioManager:
         
         for file in os.listdir(input_directory):
             
-            if os.path.splitext(file)[1] not in ['.wav', '.mp4']:
+            if os.path.splitext(file)[1] not in ['.wav', '.mp4', '.WAV']:
                 continue
             
             if not replace_existing:
@@ -75,7 +75,7 @@ class AudioManager:
             
             try:
                 librosa_manager = LibrosaManager(os.path.join(input_directory, file))
-                resampled_audio = librosa_manager.resample(target_sample_rate)
+                resampled_audio = librosa_manager.resample(target_sample_rate) ## SB_Comment - see librosa manager re: resampling
                 sf.write(os.path.join(output_directory, file), resampled_audio, target_sample_rate, subtype='PCM_24')
             except Exception as e:
                 print(f'Failed to Resample: {file}')
@@ -85,7 +85,7 @@ class AudioManager:
     
     def addNoiseWithSnr(self, audio_path: str, snr_range: list = [10, 80]):
         
-        audio, sr = librosa.load(audio_path)
+        audio, sr = librosa.load(audio_path) ## SB_comment - again, loading without native. Does thi mean that even the resampled files are being re-resampled to 22100?!
         
         audio_power = np.mean(audio ** 2)
         
@@ -96,14 +96,6 @@ class AudioManager:
         noisy_audio = audio + noise
 
         return noisy_audio, noise_snr, sr
-                
-        # RB - TO ADD: Gauthams integrated, clean up full pipeline, finish laundering function
-        # SB - LAUNDERING: add random assignment to bools of sub conditions (gaussian noise, transcode, neither - conf matrix)
-        # Sb - Store and output the bools to dictionary with files. 
-        # SB - Iterate through original paths and save them to a new file- wavefake style. 'laundered_16k...' 
-        # SB - Hyperparam tune for Uberduck - Sarah 
-
-
 
 
     def launderAudioDirectory(self, input_dir: str, output_dir: str, noise_type: str = 'random_gaussian', replace_existing: bool = False, transcode_prob=0.5, noise_prob=0.5):
@@ -170,7 +162,7 @@ class AudioManager:
 
 
                     #sf.write(os.path.join(output_dir, file), noisy_audio, target_sample_rate, subtype='PCM_24')
-                    sf.write(os.path.join(output_dir, file), noisy_audio, sr)
+                    sf.write(os.path.join(output_dir, file), noisy_audio, sr) # SB_Comment - again, care with SR
 
                 full_launder_details.append(file_launder_details)
 
