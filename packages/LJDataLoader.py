@@ -45,6 +45,8 @@ class LJDataLoader:
     def selectRandomArchitecture(self, target_col: str, source_cols: list):
 
         def randomlySelectCols(rw):
+            #setting random seed for reproducibility    
+            np.random.seed(12)
             rand_idx = np.random.randint(0, len(source_cols))
             return rw[source_cols[rand_idx]]
 

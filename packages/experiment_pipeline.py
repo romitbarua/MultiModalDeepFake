@@ -57,7 +57,7 @@ class ExperimentPipeline:
     ################################# Feature Generation ############################
     #################################################################################
     
-    def generate_features(self, feature_method='all', openSmile_feature_count=10):
+    def generate_features(self, feature_method='all', open_smile_feature_count=10):
 
         
         #### titanet features ####
@@ -68,12 +68,12 @@ class ExperimentPipeline:
         if feature_method == 'openSmile_binary':
             self.feature_store['openSmile_binary'] = self._generate_openSmile_features(feature_selector_type='random_forest', 
                                                                                        label_type='binary', 
-                                                                                       feature_count=openSmile_feature_count)
+                                                                                       feature_count=open_smile_feature_count)
 
         if feature_method == 'openSmile_multiclass':
             self.feature_store['openSmile_multiclass'] = self._generate_openSmile_features(feature_selector_type='random_forest', 
                                                                                             label_type='multiclass', 
-                                                                                            feature_count=openSmile_feature_count)
+                                                                                            feature_count=open_smile_feature_count)
         #### cadence features ####ß
         if feature_method == 'cadence':
             self.feature_store['cadence'] = self._generate_cadence_features()
@@ -83,10 +83,10 @@ class ExperimentPipeline:
             self.feature_store['titanet'] = self._generate_titanet_features()
             self.feature_store['openSmile_binary'] = self._generate_openSmile_features(feature_selector_type='random_forest', 
                                                                                        label_type='binary', 
-                                                                                       feature_count=openSmile_feature_count)
+                                                                                       feature_count=open_smile_feature_count)
             self.feature_store['openSmile_multiclass'] = self._generate_openSmile_features(feature_selector_type='random_forest', 
                                                                                             label_type='multiclass', 
-                                                                                            feature_count=openSmile_feature_count)
+                                                                                            feature_count=open_smile_feature_count)
             self.feature_store['cadence'] = self._generate_cadence_features()
 
     #### private methods for feature generation ####
@@ -119,40 +119,40 @@ class ExperimentPipeline:
     ################################# Train Predict #################################
     #################################################################################
     
-    def train_predict_using_models(self, models = ['logreg', 'random_forest'], run_tags=None, run_name_prefix=None, create_df_artifact=False):
+    def train_predict_using_models(self, models = ['logreg', 'random_forest'], run_tags=None, run_name_prefix=None, create_df_artifact=False, label_type='label'):
 
         #run train eval loop
         for model_type in models:
-            for label_type in ['label', 'multiclass_label']:
-                for feature_method, feature_data in self.feature_store.items():
+            for feature_method, feature_data in self.feature_store.items():
 
-                    #condition to skip certain feature methods for certain label types
-                    if feature_method == 'openSmile_binary' and label_type == 'multiclass_label':
-                        break
-                    if feature_method == 'openSmile_multiclass' and label_type == 'label':
-                        break
+                #condition to skip certain feature methods for certain label types
+                if label_type == 'multiclass_label' and feature_method == 'openSmile_binary':
+                    continue
+                if label_type == 'label' and feature_method == 'openSmile_multiclass':
+                    continue
+                
 
-                    #generate mlflow run details
-                    run_tags, run_name = self._generate_mlflow_run_details(run_tags, run_name_prefix, model_type, label_type, feature_method)
+                #generate mlflow run details
+                run_tags, run_name = self._generate_mlflow_run_details(run_tags, run_name_prefix, model_type, label_type, feature_method)
 
-                    #start mlflow run
-                    with mlflow.start_run(tags=run_tags, run_name=run_name) as run:
+                #start mlflow run
+                with mlflow.start_run(tags=run_tags, run_name=run_name) as run:
 
-                        #instantiate model and perform trainPredict
-                        model = ModelManager(model_name=model_type, 
-                                             data=feature_data[0], 
-                                             feature_cols=feature_data[1], 
-                                             merge_train_dev=True)
-                        
-                        model.trainPredict(label_col=label_type)
+                    #instantiate model and perform trainPredict
+                    model = ModelManager(model_name=model_type, 
+                                            data=feature_data[0], 
+                                            feature_cols=feature_data[1], 
+                                            merge_train_dev=True)
+                    
+                    model.trainPredict(label_col=label_type)
 
-                        #mlflow logging
-                        self._log_mlflow_run_details(run, model, create_df_artifact)
+                    #mlflow logging
+                    self._log_mlflow_run_details(run, model, create_df_artifact)
 
-                        #end mlflow run
-                        mlflow.end_run()
+                    #end mlflow run
+                    mlflow.end_run()
 
-                        print('Finished run: ' + run.info.run_name)
+                    print('Finished run: ' + run.info.run_name)
             
 
     #### private methods for train predict ####
@@ -187,7 +187,7 @@ class ExperimentPipeline:
         ##### 3) mlflow log model artifacts #####  
         ## train_dev_test data
         if create_df_artifact:
-            data_path = '/home/ubuntu/mlflow-test/data.csv'
+            data_path = '/home/ubuntu/data/temp/data.csv'
             model.data.to_csv(data_path, index=False)   
             mlflow.log_artifact(data_path)
             os.remove(data_path)
