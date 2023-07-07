@@ -12,7 +12,7 @@ class LJDataLoader:
         assert '.csv' in data_path, 'Data Path should be a csv file.'
         self.metadata = pd.read_csv(data_path)
         self._validateData()
-        self._filterCols(filter_cols)
+        #self._filterCols(filter_cols)
         self.id_col = id_col
         
     def _validateData(self):
@@ -46,7 +46,7 @@ class LJDataLoader:
 
         def randomlySelectCols(rw):
             #setting random seed for reproducibility    
-            np.random.seed(12)
+            #np.random.seed(12)
             rand_idx = np.random.randint(0, len(source_cols))
             return rw[source_cols[rand_idx]]
 

@@ -4,7 +4,7 @@ import multiprocessing
 sys.path.append("/home/ubuntu/MultiModalDeepFake")
 import pandas as pd
 import mlflow
-import experiment_pipeline as ep
+import packages.experiment_pipeline as ep
 import time
 import argparse
 
@@ -15,7 +15,7 @@ def run_pipeline(fake_cols, metadata_path, open_smile_feature_count, run_name_pr
     exp = ep.ExperimentPipeline(fake_cols, metadata_path)
     exp.generate_features(feature_method='all', open_smile_feature_count=open_smile_feature_count)
     exp.train_predict_using_models(run_name_prefix=run_name_prefix, run_tags=run_tags, models=models,
-                                    create_df_artifact=create_df_artifact, label_type='label')
+                                    create_df_artifact=create_df_artifact, label_type=label_type)
 
 
 def main(experiment_name, open_smile_feature_count, create_df_artifact, num_processes):

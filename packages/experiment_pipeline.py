@@ -202,9 +202,9 @@ class ExperimentPipeline:
         for key, value in model.class_accuracy.items():
             if key in self.fake_cols:
                 agg_accuracy += value
-            #compute average accuracy for fake classes  
-            agg_accuracy = agg_accuracy / len(self.fake_cols) 
-            mlflow.log_metric("fake_accuracy", agg_accuracy)
+        #compute average accuracy for fake classes  
+        agg_accuracy = agg_accuracy / len(self.fake_cols) 
+        mlflow.log_metric("fake_accuracy", agg_accuracy)
         
         #save aggregate accuracy 
         mlflow.log_metric("accuracy", model.accuracy)
