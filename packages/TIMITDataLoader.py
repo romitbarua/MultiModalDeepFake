@@ -58,7 +58,7 @@ class TIMITDataLoader:
     
     def generate_split_speaker_test(self, speakers_to_remove=['Biden', 'MJAE0']):
 
-        data_df = self.generateFinalDataFrame()
+        data_df = self.generateFinalDataFrame(folder=True)
         
         data_df['speaker'] = [item.split('/')[-1].split('_')[0] for item in data_df['path']]
         data_df['remove'] = [1 if item in speakers_to_remove else 0 for item in data_df['speaker']]
