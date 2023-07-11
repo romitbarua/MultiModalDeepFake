@@ -1,7 +1,8 @@
 import os
 import glob
 import pathlib
-from random import random, sample, seed, shuffle
+from random import sample, seed, shuffle
+import random
 import pandas as pd
 import numpy as np
 
@@ -9,6 +10,8 @@ class TIMITDataLoader:
 
     def __init__(self, data_path: str, id_col: str = 'id') -> None:
         self.file_path = data_path
+        #set seed
+        seed(12)        
         
     def flatten(self, l):
         return [item for sublist in l for item in sublist]
@@ -24,12 +27,12 @@ class TIMITDataLoader:
         
         return(cleaned_files)
         
-    def generate_split(self, folder=False):
+    def generate_split(self, folder=False, balanced=True):
 
         if folder:
             data_df = self.generateFinalDataFrame_folder()
         else:
-            data_df = self.generateFinalDataFrame()
+            data_df = self.generateFinalDataFrame(balanced=balanced)
         
         indices = list(data_df.index)
         
@@ -157,6 +160,7 @@ class TIMITDataLoader:
             fake_examples = [file for file in fake_resampled_wav_files if f'/{phrase}/' in file]
 
             # Ensure we take the same number of each phrase for real and fake, downsample the fake files 
+            
 
             if len(real_examples) > len(fake_examples):
                 real_examples = sample(real_examples, len(fake_examples))
@@ -225,7 +229,6 @@ class TIMITDataLoader:
             return None
         
         if balanced:
-            seed(12)
             
             # Real = 0
             balanced_real_paths = []

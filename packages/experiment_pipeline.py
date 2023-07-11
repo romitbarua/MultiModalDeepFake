@@ -4,6 +4,7 @@ sys.path.append("/home/ubuntu/MultiModalDeepFake")
 import nemo.collections.asr as nemo_asr 
 import pandas as pd
 import mlflow
+import copy
 
 from packages.LJDataLoader import LJDataLoader
 from packages.AudioEmbeddingsManager import AudioEmbeddingsManager
@@ -111,7 +112,7 @@ class ExperimentPipeline:
     def _generate_cadence_features(self):
         
         cadence_manager = CadenceModelManager(self.data_df)
-        cad_feature_df, cad_feature_cols, scalar = cadence_manager.run_cadence_feature_extraction_pipeline(fill_na=-1) # Add param for load features or not
+        cad_feature_df, cad_feature_cols, scalar = cadence_manager.run_cadence_feature_extraction_pipeline(fill_na=-1)
 
         return cad_feature_df, cad_feature_cols
     
@@ -152,7 +153,7 @@ class ExperimentPipeline:
                     #end mlflow run
                     mlflow.end_run()
 
-                    print('Finished run: ' + run.info.run_name)
+                    print('Finished run: ' + run.info.run_name + 'with feature method: ' + feature_method)
             
 
     #### private methods for train predict ####
@@ -160,9 +161,8 @@ class ExperimentPipeline:
     def _generate_mlflow_run_details(self, run_tags, run_name_prefix, model_type, label_type, feature_method):
 
         #tag details
-        _run_tags = {'feature_method': feature_method, 'label_type': label_type, 'selected_architectures':self.fake_cols}
-        if run_tags is not None:
-            _run_tags.update(run_tags)
+        _run_tags = copy.deepcopy(run_tags)
+        _run_tags.update({'feature_method': feature_method, 'label_type': label_type, 'selected_architectures':self.fake_cols})
 
         #run name
         if (run_tags is not None) and ('laundered'in run_tags.keys()) and (run_tags['laundered'] == 1):
@@ -195,16 +195,17 @@ class ExperimentPipeline:
         ##### 4) mlflow log model metrics #####
         #save class accuracies independently
         for key, value in model.class_accuracy.items():
-            mlflow.log_metric(key + '_accuracy', value) 
+            mlflow.log_metric(str(key) + '_accuracy', value) 
 
         #save aggregate accuracy
-        agg_accuracy = 0
-        for key, value in model.class_accuracy.items():
-            if key in self.fake_cols:
-                agg_accuracy += value
-        #compute average accuracy for fake classes  
-        agg_accuracy = agg_accuracy / len(self.fake_cols) 
-        mlflow.log_metric("fake_accuracy", agg_accuracy)
+        if len(self.fake_cols) > 1:
+            agg_accuracy = 0
+            for key, value in model.class_accuracy.items():
+                if key in self.fake_cols:
+                    agg_accuracy += value
+            #compute average accuracy for fake classes  
+            agg_accuracy = agg_accuracy / len(self.fake_cols) 
+            mlflow.log_metric("fake_accuracy", agg_accuracy)
         
         #save aggregate accuracy 
         mlflow.log_metric("accuracy", model.accuracy)

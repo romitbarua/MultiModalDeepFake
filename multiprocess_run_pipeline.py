@@ -144,7 +144,7 @@ if __name__ == "__main__":
     parser.add_argument("experiment_name", type=str, help="Name of the experiment")
     parser.add_argument("--create_df_artifact", action="store_true", help="Flag to enable creating df artifact")
     parser.add_argument("--open_smile_feature_count", type=int, default=10, help="Value for open smile feature count")
-    parser.add_argument("--num_processes", type=int, default=5, help="Number of parallel processes to run")
+    parser.add_argument("--num_processes", type=int, default=15, help="Number of parallel processes to run")
 
     # Parse the command-line arguments
     args = parser.parse_args()
