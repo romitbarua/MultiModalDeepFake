@@ -23,5 +23,5 @@ cad_model = CadenceModelManager(data_df)
 start_time = time.time()
 output_dir = '/home/ubuntu/data/wavefake_data/Cadence_features/16khz/'
 output_name = arch
-cad_model.hyperparam_search_and_featues(output_dir=output_dir, output_name=output_name, n_iter=50, sample_size=500, init_ex_count=25)
+cad_model.hyperparam_search_and_features(output_dir=output_dir, output_name=output_name, n_iter=50, sample_size=500, init_ex_count=25)
 print("--- %s seconds ---" % (time.time() - start_time))

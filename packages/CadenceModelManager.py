@@ -189,7 +189,7 @@ class CadenceModelManager:
         return params, acc
         
         
-    def hyperparam_search_and_featues(self, output_dir, output_name, n_iter=25, sample_size=300, init_ex_count=20, gp_ex_count=1000):
+    def hyperparam_search_and_features(self, output_dir, output_name, n_iter=25, sample_size=300, init_ex_count=20, gp_ex_count=1000):
         
         params, _ = self.hyperparam_search(n_iter=n_iter, sample_size=sample_size, init_ex_count=init_ex_count, gp_ex_count=gp_ex_count)
         window_size, silence_threshold = params[0], params[1]
